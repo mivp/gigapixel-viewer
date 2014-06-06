@@ -37,7 +37,7 @@ examples/deepzoom/templates/slide_tiled.html
 - Receives tiled display parameters from url x,y,w,h
 - Sets initial pan based on tile info
 - zoomBy/zoomTo/panBy/panTo functions to simplify calling API from Omegalib
-- 
+
 examples/deepzoom/deepzoom_tiled.py
 - Modified deepzoom_server.py to use slide_tiled.html
 
