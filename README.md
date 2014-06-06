@@ -37,12 +37,14 @@ examples/deepzoom/templates/slide_tiled.html
 - Receives tiled display parameters from url x,y,w,h
 - Sets initial pan based on tile info
 - zoomBy/zoomTo/panBy/panTo functions to simplify calling API from Omegalib
+- 
 examples/deepzoom/deepzoom_tiled.py
 - Modified deepzoom_server.py to use slide_tiled.html
 
 **Testing**
-Currently 
-test/cave2-emu.cfg
+Currently will only run on a 20 node setup like the CAVE
+test/cave2-emu.cfg contains an example config to emulate this on a desktop
+See README.md in test/ for how to use 
 
 **TODO**
 - Start and stop the server from the gigaview.py script
