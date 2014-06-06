@@ -1,0 +1,3 @@
+[submodule "openslide-python"]
+	path = openslide-python
+	url = https://github.com/cave2/openslide-python.git
