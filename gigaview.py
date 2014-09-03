@@ -56,6 +56,7 @@ for n in range(1,len(nodes)):
     if nodes[n]["node"] == node:
         ww = WebView.create(width, height, False) #No WebGL
         frame = WebFrame.create(uiroot)
+        frame.setLayer(WidgetLayer.Back);
 
         offset = width * (n-1);
 
@@ -84,7 +85,7 @@ def onEvent():
 
     #Initial movement factor for panning
     #(adjusted by zoom for sensible pan increment)
-    factor = 0.02
+    factor = 0.01
 
     type = e.getServiceType()
 
