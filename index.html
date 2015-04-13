@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title></title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.13/esri/css/esri.css">
+    <style>
+      html, body, #map {
+        height: 100%; width: 100%; margin: 0; padding: 0; 
+      }
+    </style>
+
+    <script src="http://js.arcgis.com/3.13/"></script>
+    <script>
+var args = {};
+var viewer;
+var tilex, tiley, tilew, tileh;
+var centre;
+
+
+      var map;
+    
+      require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "dojo/domReady!"],
+        function(Map, Tiled) {
+        //configure map animation to be faster
+        esriConfig.defaults.map.panDuration = 0; // time in milliseconds, default panDuration: 350
+        esriConfig.defaults.map.panRate = 0; // default panRate: 25
+        esriConfig.defaults.map.zoomDuration = 0; // default zoomDuration: 500
+        esriConfig.defaults.map.zoomRate = 0; // default zoomRate: 25
+
+        map = new Map("map", {zoom: 8, nav: false, logo: false, slider: false, optimizePanAnimation: true, navigationMode: 'classic'});
+
+          var tiled = new Tiled("http://thermalweb.it.csiro.au/arcgis/rest/services/CoPP/Image3/MapServer");
+          tiled.opacity = 1.0;
+          map.addLayer(tiled);
+          var tiled2 = new Tiled("http://thermalweb.it.csiro.au/arcgis/rest/services/CoPP/copp_thermal_summer/MapServer");
+          tiled2.opacity = 0.2;
+          map.addLayer(tiled2);
+
+          map.on("load", loadHandler);
+          
+          //map.on("extent-change", changeHandler);
+
+        }
+      );
+
+    var urlq = decodeURI(window.location.href);
+    if (urlq.indexOf("#") > 0) {
+      var parts = urlq.split("#"); //whole querystring before and after ?
+      parts = parts[1].split("&");
+      for (var i in parts) {
+        var split = parts[i].split("=");
+        if (split.length == 2) {
+          args[split[0]] = split[1];
+        }
+      }
+    }
+
+function getCentre() {
+  require(["esri/geometry/webMercatorUtils"],
+    function(w) {
+      var c = w.webMercatorToGeographic(map.extent.getCenter()); centre = [parseFloat(c.x.toFixed(3)), parseFloat(c.y.toFixed(3))];
+      console.log(JSON.stringify(centre));
+    }
+  );
+}
+
+function getExtents() {
+  require(["dojo/json"],
+    function(j) {
+      console.log(j.stringify(function(){var e=map.extent.toJson();e.xmin=parseInt(e.xmin);e.ymin=parseInt(e.ymin);e.xmax=parseInt(e.xmax);e.ymax=parseInt(e.ymax);return e;}()));
+    }
+  );
+}
+
+var orig;
+function loadHandler() {
+  orig = map.extent.getCenter();
+  //Get tile config from args
+  tilex = parseInt(args["x"]) || 0;
+  tiley = parseInt(args["y"]) || 0;
+  tilew = parseInt(args["w"]) || 1;
+  tileh = parseInt(args["h"]) || 1;
+
+  //Initial offset
+  //getCentre();
+  //alert(JSON.stringify(centre));
+  //return;
+  //centre = new OpenSeadragon.Point(0.0, 0.0);
+  //centre = viewer.viewport.getCenter();
+  
+
+console.log(JSON.stringify(map.extent.getCenter()));
+console.log(JSON.stringify(map.extent));
+  //initial zoom 0.25
+  //viewer.viewport.zoomTo(0.25 * tilew);
+    //var point = new esri.geometry.Point(centre[0], centre[1], map.spatialReference);
+
+setView();
+//zoomBy(0);
+    return;
+
+  //Calculate and set pan offset for this tile based on zoom
+  var zoom = map.getZoom() / tilew;
+  var panx = 0.0;
+  var pany = 0.0;
+  //var xshift = ((tilew - 1) / 2.0 ) / tilew;
+  //alert(xshift);
+  panx = tilex / tilew - xshift;
+  pany = tiley / tileh;
+  //alert(panx + "," + pany);
+
+  ////var pan = new OpenSeadragon.Point(panx / zoom + centre.x, pany / zoom + centre.y);
+  //var pan = new OpenSeadragon.Point(panx / zoom, pany / zoom);
+  ////viewer.viewport.panTo(pan)
+  //viewer.viewport.panBy(pan)
+}
+
+function changeHandler() {
+  //console.log("change");
+  getCentre();
+}
+
+var oldoffset;
+function setView() {
+  if (!tilew || !tilex) return;
+  var xmin = map.extent.xmin;
+  var xw = map.extent.xmax - map.extent.xmin;
+  var halfw = xw / (tilew*2);
+  var xoffset = tilew * halfw * (tilex*2 + 1);
+
+  if (xoffset == oldoffset) return;
+  oldoffset = xoffset;
+  //alert(xw + " : " + xoffset);
+
+  //  var point = map.extent.getCenter();
+  //var zoom = map.getZoom();
+  //  zoom += tilew;
+  //  map.centerAndZoom(point, zoom);
+
+    var point = map.extent.getCenter();
+    point.x = xmin + xoffset;
+    //map.centerAndZoom(point, Math.floor(0.25 * tilew));
+    map.centerAt(point);
+}
+
+function zoomBy(z) {
+  //viewer.viewport.zoomBy(z); //new OpenSeadragon.Point(0.5, 0.5));
+  //centre.x += 1.5;//Depends on initial zoom and offset! ~0.333 for 1.0 in cave (20 tiles)
+        //centre = viewer.viewport.getCenter();
+  //viewer.viewport.zoomBy(z, centre); //new OpenSeadragon.Point(0.5, 0.5));
+  
+  z = map.getZoom();
+  if (z > 0)
+    z++;
+  else
+    z--;
+  if (z < 0 || z > 10) return;
+  map.centerAndZoom(orig, z);
+  setView();
+}
+
+function zoomTo(zoom) {
+  //viewer.viewport.zoomTo(zoom);
+}
+
+function panBy(x, y) {
+  viewer.viewport.panBy(new OpenSeadragon.Point(x, y));
+        centre.x += x;
+        centre.y += y;
+}
+
+function panTo(x, y) {
+  viewer.viewport.panTo(new OpenSeadragon.Point(x, y));
+        centre.x = x;
+        centre.y = y;
+}
+
+
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>
+ 

@@ -45,14 +45,17 @@ nodes = [{"node" : "head1", "tile" : "headTile"},
 
 for n in range(1,len(nodes)):
     #Setup a webView per node
+    #print n
+    #print node
     if nodes[n]["node"] == node:
+        #ww = WebView.create(width, height, False) #No WebGL
         ww = WebView.create(width, height, False) #No WebGL
         frame = WebFrame.create(uiroot)
         frame.setLayer(WidgetLayer.Back);
 
         offset = width * (n-1);
 
-        turl ="http://%s:5000#w=%d&h=%d&y=%d&x=%d" % (node, htiles, vtiles, 0, n-1)
+        turl ="http://head1:8000#w=%d&h=%d&y=%d&x=%d" % (htiles, vtiles, 0, n-1)
         #turl ="http://localhost:5000#h=%d&w=%d&y=%d&x=%d" % (node, htiles, vtiles, 0, n-1)
         print "Node: %s %s Offset: %d" % (node, turl, offset)
         ww.loadUrl(turl)
@@ -77,7 +80,7 @@ def onEvent():
 
     #Initial movement factor for panning
     #(adjusted by zoom for sensible pan increment)
-    factor = 0.01
+    factor = 0.001
 
     type = e.getServiceType()
 
@@ -97,13 +100,13 @@ def onEvent():
         # not the character (since keys like Shift, Alt, etc do not have an 
         # ASCII character). ord() does the conversion for you.
         if(e.isKeyDown(ord('w'))):
-          evaljs("panBy(0, -0.1);")
+          evaljs("map.panUp(0.1);")
         elif(e.isKeyDown(ord('a'))):
-          evaljs("panBy(-0.1, 0);")
+          evaljs("map.panLeft(0.1);")
         elif(e.isKeyDown(ord('s'))):
-          evaljs("panBy(0, 0.1);")
+          evaljs("map.panDown(0.1);")
         elif(e.isKeyDown(ord('d'))):
-          evaljs("panBy(0.1, 0);")
+          evaljs("map.panRight(0.1);")
         elif(e.isKeyDown(ord('z'))):
           #evaljs("viewer.zoomBy(1.1);")
           evaljs("zoomBy(1.1);")
@@ -135,16 +138,16 @@ def onEvent():
         ##      using controller but can't be mapped to separate functions
         if(e.isButtonDown( EventFlags.ButtonUp )): # D-Pad up
             print("Wand ", sourceID, "D-Pad up pressed")
-            evaljs("panBy(0, %d);" % (-factor))
+            evaljs("map.panUp(%d);" % (factor*0.1))
         if(e.isButtonDown( EventFlags.ButtonDown )): # D-Pad down
             print("Wand ", sourceID, "D-Pad down pressed")
-            evaljs("panBy(0, %d);" % (factor))
+            evaljs("map.panDown(%d);" % (factor*0.1))
         if(e.isButtonDown( EventFlags.ButtonLeft )): # D-Pad left
             print("Wand ", sourceID, "D-Pad left pressed")
-            evaljs("panBy(%d, 0);" % (factor))
+            evaljs("map.panLeft(%d);" % (factor))
         if(e.isButtonDown( EventFlags.ButtonRight )): # D-Pad right
             print("Wand ", sourceID, "D-Pad right pressed")
-            evaljs("panBy(%d, 0);" % (factor))
+            evaljs("map.panRight(%d);" % (factor))
         if(e.isButtonDown( EventFlags.Button6 )): # Analog stick button (L3)
             print("Wand ", sourceID, "L3 button pressed")
 
@@ -182,8 +185,13 @@ def onEvent():
             #zoom *= z
             #browser.evaljs("zoomBy(%f);" % z)
             x = analogLR * factor
+            if x > 0: evaljs("map.panRight(%f);" % (x * 0.01))
+            if x < 0: evaljs("map.panLeft(%f);" % (-x * 0.01))
             y = analogUD * factor
-            evaljs("panBy(%f, %f);" % (x, y))
+            if y < 0: evaljs("map.panUp(%f);" % (-y * 0.01))
+            if y > 0: evaljs("map.panDown(%f);" % (y * 0.01))
+            #evaljs("panBy(%f, %f);" % (x, y))
+            #evaljs("map.panUp(0.1);")
 
         ## Grab the analog trgger
         analogL2 = e.getAxis(4)
